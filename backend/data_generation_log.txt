@@ -1,0 +1,4 @@
+Data Generation Log
+=================
+Created: 2025-05-04
+This file will contain timing information for the data generation process. 

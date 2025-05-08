@@ -1,0 +1,16 @@
+Data generation started at 2025-05-04 15:56:21.713272
+Target: 1000 contacts
+Batch size: 1000
+-------------------------------------
+Starting generation of 1000 contacts...
+Current database size: 109.08 MB
+Current contact count: 100000
+Generating 0 additional contacts...
+
+Final statistics:
+Total contacts: 100000
+Total transactions: 551869
+Average transactions per contact: 5.52
+
+Total generation time: 0.04 seconds (0.00 minutes)
+Data generation completed at 2025-05-04 15:56:21.758930
