@@ -3,67 +3,30 @@
 # Update system
 sudo yum update -y
 
-# Install Python 3.9 and development tools
-sudo yum install -y python3.9 python3.9-devel gcc
+# Install Docker
+sudo yum install -y docker
+sudo systemctl enable docker
+sudo systemctl start docker
+sudo usermod -aG docker ec2-user
 
-# Install nginx
-sudo yum install -y nginx
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 
-# Create application directory
+# Create necessary directories
 sudo mkdir -p /var/www/ubbank
+sudo mkdir -p /var/www/ubbank/nginx/conf.d
+sudo mkdir -p /var/www/ubbank/nginx/ssl
+sudo mkdir -p /var/www/ubbank/nginx/certbot/conf
+sudo mkdir -p /var/www/ubbank/nginx/certbot/www
+sudo mkdir -p /var/www/ubbank/uploads
 sudo chown -R ec2-user:ec2-user /var/www/ubbank
 
-# Create and activate virtual environment
-python3.9 -m venv /var/www/ubbank/venv
-source /var/www/ubbank/venv/bin/activate
-
-# Install Python dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Create systemd service file
-sudo tee /etc/systemd/system/ubbank.service << EOF
-[Unit]
-Description=UBBank FastAPI Application
-After=network.target
-
-[Service]
-User=ec2-user
-Group=ec2-user
-WorkingDirectory=/var/www/ubbank
-Environment="PATH=/var/www/ubbank/venv/bin"
-ExecStart=/var/www/ubbank/venv/bin/uvicorn backend.main:app --host 0.0.0.0 --port 8000
-
-[Install]
-WantedBy=multi-user.target
+# Create .env file for environment variables
+cat > /var/www/ubbank/.env << EOF
+JWT_SECRET=supersecretkey
+DOMAIN_NAME=your-ec2-domain.com  # Replace with your actual domain
 EOF
-
-# Configure Nginx
-sudo tee /etc/nginx/conf.d/ubbank.conf << EOF
-server {
-    listen 80;
-    server_name _;  # Replace with your domain name when you have one
-
-    location / {
-        proxy_pass http://localhost:8000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-
-    location /static {
-        alias /var/www/ubbank/static;
-    }
-}
-EOF
-
-# Start and enable services
-sudo systemctl daemon-reload
-sudo systemctl enable ubbank
-sudo systemctl start ubbank
-sudo systemctl enable nginx
-sudo systemctl start nginx
 
 # Configure firewall
 sudo yum install -y firewalld
@@ -73,6 +36,92 @@ sudo firewall-cmd --permanent --add-service=http
 sudo firewall-cmd --permanent --add-service=https
 sudo firewall-cmd --reload
 
-echo "Deployment completed! Check the status with:"
-echo "sudo systemctl status ubbank"
-echo "sudo systemctl status nginx" 
+# Create init-letsencrypt.sh script for SSL certificate
+cat > /var/www/ubbank/init-letsencrypt.sh << 'EOF'
+#!/bin/bash
+
+domains=(your-ec2-domain.com)  # Replace with your domain
+email="your-email@example.com"  # Replace with your email
+staging=0 # Set to 1 if you're testing your setup
+
+data_path="./nginx/certbot"
+rsa_key_size=4096
+
+if [ -d "$data_path" ]; then
+  read -p "Existing data found for $domains. Continue and replace existing certificate? (y/N) " decision
+  if [ "$decision" != "Y" ] && [ "$decision" != "y" ]; then
+    exit
+  fi
+fi
+
+if [ ! -e "$data_path/conf/options-ssl-nginx.conf" ] || [ ! -e "$data_path/conf/ssl-dhparams.pem" ]; then
+  echo "### Downloading recommended TLS parameters ..."
+  mkdir -p "$data_path/conf"
+  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf > "$data_path/conf/options-ssl-nginx.conf"
+  curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > "$data_path/conf/ssl-dhparams.pem"
+  echo
+fi
+
+echo "### Creating dummy certificate for $domains ..."
+path="/etc/letsencrypt/live/$domains"
+mkdir -p "$data_path/conf/live/$domains"
+docker-compose run --rm --entrypoint "\
+  openssl req -x509 -nodes -newkey rsa:$rsa_key_size -days 1\
+    -keyout '$path/privkey.pem' \
+    -out '$path/fullchain.pem' \
+    -subj '/CN=localhost'" certbot
+echo
+
+echo "### Starting nginx ..."
+docker-compose up --force-recreate -d nginx-proxy
+echo
+
+echo "### Deleting dummy certificate for $domains ..."
+docker-compose run --rm --entrypoint "\
+  rm -Rf /etc/letsencrypt/live/$domains && \
+  rm -Rf /etc/letsencrypt/archive/$domains && \
+  rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot
+echo
+
+echo "### Requesting Let's Encrypt certificate for $domains ..."
+domain_args=""
+for domain in "${domains[@]}"; do
+  domain_args="$domain_args -d $domain"
+done
+
+# Select appropriate email arg
+case "$email" in
+  "") email_arg="--register-unsafely-without-email" ;;
+  *) email_arg="--email $email" ;;
+esac
+
+# Enable staging mode if needed
+if [ $staging != "0" ]; then staging_arg="--staging"; fi
+
+docker-compose run --rm --entrypoint "\
+  certbot certonly --webroot -w /var/www/certbot \
+    $staging_arg \
+    $email_arg \
+    $domain_args \
+    --rsa-key-size $rsa_key_size \
+    --agree-tos \
+    --force-renewal" certbot
+echo
+
+echo "### Reloading nginx ..."
+docker-compose exec nginx-proxy nginx -s reload
+EOF
+
+chmod +x /var/www/ubbank/init-letsencrypt.sh
+
+echo "Deployment setup completed! Next steps:"
+echo "1. Edit /var/www/ubbank/.env and set your domain name"
+echo "2. Edit /var/www/ubbank/init-letsencrypt.sh and set your domain and email"
+echo "3. Run: cd /var/www/ubbank && docker-compose up -d"
+echo "4. After containers are running, execute: ./init-letsencrypt.sh"
+echo ""
+echo "To check the status of your containers:"
+echo "docker-compose ps"
+echo ""
+echo "To view logs:"
+echo "docker-compose logs -f" 

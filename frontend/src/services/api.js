@@ -1,5 +1,16 @@
-const API_URL = 'http://localhost:8000/api';
-const WS_URL = 'ws://localhost:8000/ws';
+// Get API URL from environment variable or fallback to localhost
+const getBaseUrl = () => {
+    if (process.env.NODE_ENV === 'production') {
+        // In production, use the current domain
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        return `${protocol}//${hostname}`;
+    }
+    return 'http://localhost:8000';
+};
+
+const API_URL = `${getBaseUrl()}/api`;
+const WS_URL = `${getBaseUrl().replace('http', 'ws')}/ws`;
 
 // Helper function to get headers with auth token
 const getAuthHeaders = (contentType = false) => {
