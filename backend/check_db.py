@@ -28,3 +28,5 @@ conn.close()
 
 print("\nIf you're seeing contacts across different ID ranges, your database is populated correctly.")
 print("The issue might be with pagination or sorting in the API or frontend.") 
+
+# python check_db.py

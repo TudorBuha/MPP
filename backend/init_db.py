@@ -4,6 +4,10 @@ from sqlalchemy.orm import Session
 import random
 from datetime import datetime, timedelta
 import json
+from models.user import UserDB
+from passlib.context import CryptContext
+from models.log import LogEntry
+from models.monitored_user import MonitoredUser
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -115,7 +119,30 @@ def populate_initial_contacts():
     finally:
         db.close()
 
+def create_admin_user():
+    from sqlalchemy.orm import sessionmaker
+    from models.user import UserDB
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+    db = SessionLocal()
+    pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
+    try:
+        existing = db.query(UserDB).filter_by(username="admin").first()
+        if not existing:
+            admin = UserDB(
+                username="admin",
+                password_hash=pwd_context.hash("admin123"),
+                role="admin"
+            )
+            db.add(admin)
+            db.commit()
+            print("Admin user created: username=admin, password=admin123")
+        else:
+            print("Admin user already exists.")
+    finally:
+        db.close()
+
 if __name__ == "__main__":
     print("Initializing database...")
+    create_admin_user()
     populate_initial_contacts()
     print("Database initialization completed!") 

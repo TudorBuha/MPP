@@ -15,3 +15,5 @@ print("Populating database with sample data...")
 populate_initial_contacts()
 
 print("Database migration completed successfully!") 
+
+# python migrate_db.py

@@ -6,6 +6,10 @@ from store.db_store import db_store
 from sqlalchemy.orm import Session
 from datetime import datetime
 import random
+from utils.logging import log_action
+from routes.auth import login
+import jwt
+from fastapi import Header
 
 router = APIRouter()
 
@@ -74,6 +78,17 @@ def populate_initial_contacts():
 # Initialize contacts
 populate_initial_contacts()
 
+# Helper to extract user_id from JWT
+SECRET_KEY = "supersecretkey"
+ALGORITHM = "HS256"
+def get_current_user_id(authorization: str = Header(...)):
+    try:
+        token = authorization.split()[1]
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload["user_id"]
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+
 @router.get("/contacts")
 async def get_contacts(
     search: str = "",
@@ -105,7 +120,7 @@ async def get_contact(contact_id: int, db: Session = Depends(get_db)):
     return contact
 
 @router.post("/contacts")
-async def create_contact(contact: ContactCreate, db: Session = Depends(get_db)):
+async def create_contact(contact: ContactCreate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     # Generate tag if not provided
     if not contact.tag and contact.name and contact.phone:
         first_two = contact.name[:2] if len(contact.name) >= 2 else contact.name
@@ -114,10 +129,11 @@ async def create_contact(contact: ContactCreate, db: Session = Depends(get_db)):
         contact.tag = f"{first_two}{last_two_digits}{last_two_name}"
     
     new_contact = db_store.create_contact(db, contact)
+    log_action(db, user_id, "create_contact", details=f"Contact ID: {new_contact['id']}")
     return new_contact
 
 @router.put("/contacts/{contact_id}")
-async def update_contact(contact_id: int, contact_update: ContactUpdate, db: Session = Depends(get_db)):
+async def update_contact(contact_id: int, contact_update: ContactUpdate, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     updated_contact = db_store.update_contact(db, contact_id, contact_update)
     if not updated_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
@@ -136,26 +152,28 @@ async def update_contact(contact_id: int, contact_update: ContactUpdate, db: Ses
         contact_update.tag = new_tag
         updated_contact = db_store.update_contact(db, contact_id, contact_update)
     
+    log_action(db, user_id, "update_contact", details=f"Contact ID: {contact_id}")
     return updated_contact
 
 @router.delete("/contacts/{contact_id}")
-async def delete_contact(contact_id: int, db: Session = Depends(get_db)):
+async def delete_contact(contact_id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user_id)):
     success = db_store.delete_contact(db, contact_id)
     if not success:
         raise HTTPException(status_code=404, detail="Contact not found")
-    
+    log_action(db, user_id, "delete_contact", details=f"Contact ID: {contact_id}")
     return {"message": "Contact deleted"}
 
 @router.post("/contacts/{contact_id}/transaction")
 async def add_transaction(
     contact_id: int = Path(..., description="Contact ID"),
     transaction: TransactionCreate = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
 ):
     updated_contact = db_store.add_transaction(db, contact_id, transaction)
     if not updated_contact:
         raise HTTPException(status_code=404, detail="Contact not found")
-    
+    log_action(db, user_id, "add_transaction", details=f"Contact ID: {contact_id}")
     return updated_contact
 
 @router.get("/contacts/{contact_id}/transactions")
@@ -186,11 +204,12 @@ async def get_transaction(
 @router.delete("/transactions/{transaction_id}")
 async def delete_transaction(
     transaction_id: int = Path(..., description="Transaction ID"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
 ):
     """Delete a transaction by ID"""
     success = db_store.delete_transaction(db, transaction_id)
     if not success:
         raise HTTPException(status_code=404, detail="Transaction not found")
-    
+    log_action(db, user_id, "delete_transaction", details=f"Transaction ID: {transaction_id}")
     return {"message": "Transaction deleted"} 

@@ -10,10 +10,13 @@ from typing import List, Dict, Any
 import os
 from routes.contacts import router as contacts_router
 from routes.analytics import router as analytics_router
+from routes.auth import router as auth_router
+from routes.admin import router as admin_router
 from datetime import datetime
 import io
 from models.database import Base, engine
 from models.contact import ContactCreate, TransactionCreate
+from services.monitoring import start_monitoring_thread
 
 # Create database tables on startup
 Base.metadata.create_all(bind=engine)
@@ -84,6 +87,8 @@ async def startup_event():
     
     # Start WebSocket task
     asyncio.create_task(generate_random_contacts())
+    # Start monitoring thread
+    start_monitoring_thread()
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -211,6 +216,12 @@ app.include_router(contacts_router, prefix="/api")
 
 # Include the analytics router
 app.include_router(analytics_router, prefix="/api")
+
+# Include the auth router
+app.include_router(auth_router, prefix="/api/auth")
+
+# Include the admin router
+app.include_router(admin_router, prefix="/api/admin")
 
 @app.get("/")
 def read_root():

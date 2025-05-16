@@ -1,16 +1,39 @@
-Data generation started at 2025-05-04 15:56:21.713272
-Target: 1000 contacts
+Data generation started at 2025-05-09 20:52:32.155018
+Target: 10000 contacts
 Batch size: 1000
 -------------------------------------
-Starting generation of 1000 contacts...
-Current database size: 109.08 MB
-Current contact count: 100000
-Generating 0 additional contacts...
+Starting generation of 10000 contacts...
+Current database size: 0.06 MB
+Current contact count: 9
+Generating 9991 additional contacts...
+Indices dropped in 0.01 seconds
+Starting batch 1/10 (1000 contacts)...
+Batch completed in 1.64 seconds - 1000 contacts
+Starting batch 2/10 (1000 contacts)...
+Batch completed in 2.05 seconds - 1000 contacts
+Starting batch 3/10 (1000 contacts)...
+Batch completed in 1.83 seconds - 1000 contacts
+Starting batch 4/10 (1000 contacts)...
+Batch completed in 1.84 seconds - 1000 contacts
+Starting batch 5/10 (1000 contacts)...
+Batch completed in 1.86 seconds - 1000 contacts
+Starting batch 6/10 (1000 contacts)...
+Batch completed in 1.98 seconds - 1000 contacts
+Starting batch 7/10 (1000 contacts)...
+Batch completed in 1.59 seconds - 1000 contacts
+Starting batch 8/10 (1000 contacts)...
+Batch completed in 1.62 seconds - 1000 contacts
+Starting batch 9/10 (1000 contacts)...
+Batch completed in 1.79 seconds - 1000 contacts
+Starting batch 10/10 (991 contacts)...
+Batch completed in 1.47 seconds - 991 contacts
+Indices created in 0.18 seconds
+VACUUM completed in 0.35 seconds
 
 Final statistics:
-Total contacts: 100000
-Total transactions: 551869
-Average transactions per contact: 5.52
+Total contacts: 10000
+Total transactions: 54745
+Average transactions per contact: 5.47
 
-Total generation time: 0.04 seconds (0.00 minutes)
-Data generation completed at 2025-05-04 15:56:21.758930
+Total generation time: 18.26 seconds (0.30 minutes)
+Data generation completed at 2025-05-09 20:52:50.424331
