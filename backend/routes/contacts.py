@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 import random
 from backend.utils.logging import log_action
-from routes.auth import login
+from backend.routes.auth import login
 import jwt
 from fastapi import Header
 
