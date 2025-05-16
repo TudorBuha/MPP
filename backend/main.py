@@ -8,10 +8,10 @@ import json
 import csv
 from typing import List, Dict, Any
 import os
-from routes.contacts import router as contacts_router
-from routes.analytics import router as analytics_router
-from routes.auth import router as auth_router
-from routes.admin import router as admin_router
+from backend.routes.contacts import router as contacts_router
+from backend.routes.analytics import router as analytics_router
+from backend.routes.auth import router as auth_router
+from backend.routes.admin import router as admin_router
 from datetime import datetime
 import io
 from models.database import Base, engine
