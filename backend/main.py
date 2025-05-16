@@ -14,9 +14,9 @@ from backend.routes.auth import router as auth_router
 from backend.routes.admin import router as admin_router
 from datetime import datetime
 import io
-from models.database import Base, engine
-from models.contact import ContactCreate, TransactionCreate
-from services.monitoring import start_monitoring_thread
+from backend.models.database import Base, engine
+from backend.models.contact import ContactCreate, TransactionCreate
+from backend.services.monitoring import start_monitoring_thread
 
 # Create database tables on startup
 Base.metadata.create_all(bind=engine)

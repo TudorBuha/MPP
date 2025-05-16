@@ -1,4 +1,4 @@
-from models.log import LogEntry
+from backend.models.log import LogEntry
 from sqlalchemy.orm import Session
 from typing import Optional
 
