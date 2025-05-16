@@ -2,9 +2,9 @@ import threading
 import time
 from datetime import datetime, timedelta
 from sqlalchemy.orm import sessionmaker
-from models.database import engine
-from models.log import LogEntry
-from models.monitored_user import MonitoredUser
+from backend.models.database import engine
+from backend.models.log import LogEntry
+from backend.models.monitored_user import MonitoredUser
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
