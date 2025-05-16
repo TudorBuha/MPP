@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 import json
 from datetime import datetime
 
-from models.contact import ContactDB, ContactCreate, ContactUpdate, TransactionDB, TransactionCreate
-from models.database import get_db
+from backend.models.contact import ContactDB, ContactCreate, ContactUpdate, TransactionDB, TransactionCreate
+from backend.models.database import get_db
 
 class DBStore:
     def get_all_contacts(self, db: Session, search: Optional[str] = None, sort_by: Optional[str] = None, 
