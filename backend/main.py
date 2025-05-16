@@ -82,7 +82,7 @@ async def generate_random_contacts():
 @app.on_event("startup")
 async def startup_event():
     # Initialize database
-    from init_db import populate_initial_contacts
+    from backend.init_db import populate_initial_contacts
     populate_initial_contacts()
     
     # Start WebSocket task
@@ -113,8 +113,8 @@ async def export_contacts():
     export_path = UPLOAD_DIR / "contacts_export.csv"
     
     # Import the db_store to get all contacts
-    from store.db_store import db_store
-    from models.database import SessionLocal
+    from backend.store.db_store import db_store
+    from backend.models.database import SessionLocal
     
     db = SessionLocal()
     try:
@@ -161,9 +161,9 @@ async def import_contacts(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only CSV files are supported")
     
     # Import necessary modules
-    from models.contact import ContactCreate
-    from store.db_store import db_store
-    from models.database import SessionLocal
+    from backend.models.contact import ContactCreate
+    from backend.store.db_store import db_store
+    from backend.models.database import SessionLocal
     
     db = SessionLocal()
     try:

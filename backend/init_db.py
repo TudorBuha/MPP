@@ -1,13 +1,13 @@
-from models.database import Base, engine
-from models.contact import ContactDB, TransactionDB
+from backend.models.database import Base, engine
+from backend.models.contact import ContactDB, TransactionDB
 from sqlalchemy.orm import Session
 import random
 from datetime import datetime, timedelta
 import json
-from models.user import UserDB
+from backend.models.user import UserDB
 from passlib.context import CryptContext
-from models.log import LogEntry
-from models.monitored_user import MonitoredUser
+from backend.models.log import LogEntry
+from backend.models.monitored_user import MonitoredUser
 
 # Create all tables
 Base.metadata.create_all(bind=engine)
@@ -121,7 +121,7 @@ def populate_initial_contacts():
 
 def create_admin_user():
     from sqlalchemy.orm import sessionmaker
-    from models.user import UserDB
+    from backend.models.user import UserDB
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     db = SessionLocal()
     pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
