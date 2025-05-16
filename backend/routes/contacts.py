@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Depends, Path
 from typing import List, Dict, Any, Optional
-from models.contact import ContactResponse, ContactCreate, ContactUpdate, TransactionCreate, Transaction
-from models.database import get_db
+from backend.models.contact import ContactResponse, ContactCreate, ContactUpdate, TransactionCreate, Transaction
+from backend.models.database import get_db
 from store.db_store import db_store
 from sqlalchemy.orm import Session
 from datetime import datetime

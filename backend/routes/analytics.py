@@ -3,8 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_, text
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from models.database import get_db
-from models.contact import ContactDB, TransactionDB
+from backend.models.database import get_db
+from backend.models.contact import ContactDB, TransactionDB
 
 router = APIRouter()
 
