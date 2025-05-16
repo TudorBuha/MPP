@@ -6,7 +6,7 @@ from backend.store.db_store import db_store
 from sqlalchemy.orm import Session
 from datetime import datetime
 import random
-from utils.logging import log_action
+from backend.utils.logging import log_action
 from routes.auth import login
 import jwt
 from fastapi import Header
